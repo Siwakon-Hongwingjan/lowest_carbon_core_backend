@@ -40,3 +40,16 @@ yarn-error.log*
 **/*.log
 package-lock.json
 **/*.bun
+/src/generated/prisma
+
+/src/generated/prisma
+
+/src/generated/prisma
+
+/generated/prisma
+
+/generated/prisma
+
+/app/generated/prisma
+
+/generated/prisma
