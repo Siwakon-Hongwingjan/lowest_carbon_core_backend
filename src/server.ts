@@ -1,4 +1,10 @@
-import { app } from './app'
+import "dotenv/config"
+import { app } from "./app"
 
-app.listen(4000)
-console.log("Core backend running on http://localhost:4000")
+const port = Number(process.env.PORT) || 4000
+
+const server = app.listen(port)
+
+if (server) {
+  console.log(`ElysiaJS server running on http://localhost:${port}`)
+}

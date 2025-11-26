@@ -1,3 +1,9 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -7,18 +13,77 @@ datasource db {
   provider = "postgresql"
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  authorId  Int
-  User      User    @relation(fields: [authorId], references: [id])
+model User {
+  id       String   @id @default(cuid())
+  lineUserId String  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  // RELATIONS
+  activities        Activity[]
+  dailyCarbonRecord DailyCarbonRecord[]
+  points            PointsTransaction[]
+  rewardHistory     RewardHistory[]
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  Post  Post[]
+model Activity {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+
+  category  ActivityCategory
+  type      String   // เช่น "เดิน", "หมูทอด", "ล้างจาน"
+  value     Float?   // เช่น ระยะทาง, ปริมาณ หรือเวลาที่ใช้
+  imageUrl  String?  // ใช้ตอนถ่ายรูปอาหาร
+  slipUrl   String?  // ใช้ตอนอัปโหลดสลิป
+  date      DateTime @default(now())
+
+  co2       Float?   // Carbon ที่คำนวณแล้ว (kg)
+
+  createdAt DateTime @default(now())
+}
+
+enum ActivityCategory {
+  TRANSPORT
+  FOOD
+  OTHER
+}
+
+model DailyCarbonRecord {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+
+  date      DateTime
+  totalCo2  Float     // รวมคาร์บอนทั้งวัน (kg)
+  activityCount Int   // จำนวนกิจกรรมทั้งหมดวันนั้น
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
+model PointsTransaction {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+
+  points    Int      // +10, +20, etc.
+  reason    String   // เช่น "ลดคาร์บอนต่ำกว่าค่าเฉลี่ย"
+  date      DateTime @default(now())
+
+  createdAt DateTime @default(now())
+}
+
+model RewardHistory {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+
+  rewardName   String
+  rewardPoints Int
+  date         DateTime @default(now())
+
+  createdAt DateTime @default(now())
 }

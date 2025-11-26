@@ -1,27 +1,42 @@
-import { Elysia } from "elysia";
-import { prisma } from "../../lib/prisma";
+import { Elysia } from "elysia"
+import { prisma } from "../db/prisma"
 
-export const testController = new Elysia({ prefix: "/test" })
+const createCustomer = async () => {
+  const newUser = await prisma.user.create({
+    data: {
+      lineUserId: "test_" + Math.random().toString(36).substring(2, 10),
+    },
+  })
 
-  // ✔️ Test 1: Create User
-  .get("/customer", async () => {
-    try {
-      const newUser = await prisma.customer.create({
-        data: {
-          name: "Test User " + Math.random().toString(36).substring(5),
-          email: "user_" + Math.random().toString(36).substring(5) + "@example.com"
+  return {
+    success: true,
+    message: "User created successfully!",
+    newUser,
+  }
+}
+
+export const testController = new Elysia()
+  .group("/test", (app) =>
+    app.get("/customer", async ({ set }) => {
+      try {
+        return await createCustomer()
+      } catch (e) {
+        set.status = 500
+        return {
+          success: false,
+          error: e instanceof Error ? e.message : e,
         }
-      });
-
-      return {
-        success: true,
-        message: "User created successfully!",
-        newUser
-      };
+      }
+    }),
+  )
+  .get("/customer", async ({ set }) => {
+    try {
+      return await createCustomer()
     } catch (e) {
+      set.status = 500
       return {
         success: false,
-        error: e instanceof Error ? e.message : e
-      };
+        error: e instanceof Error ? e.message : e,
+      }
     }
   })

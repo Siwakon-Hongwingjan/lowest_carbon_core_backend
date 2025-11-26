@@ -1,10 +1,7 @@
 import jwt from "jsonwebtoken"
-import { prisma } from "../../lib/prisma"
 import { env } from "../../config/env"
-
-type LoginBody = {
-  userId: string
-}
+import { prisma } from "../db/prisma"
+import { LoginBody } from "./auth.schema"
 
 if (!env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required for auth service")

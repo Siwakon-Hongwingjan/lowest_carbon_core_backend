@@ -1,5 +1,7 @@
-import { t } from 'elysia'
+import { Static, t } from "elysia"
 
-export const LoginSchema = t.Object({
-  userId: t.String()
+export const loginBodySchema = t.Object({
+  userId: t.String(),
 })
+
+export type LoginBody = Static<typeof loginBodySchema>
