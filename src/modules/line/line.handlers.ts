@@ -2,14 +2,17 @@ import type { Message } from "@line/bot-sdk"
 import { replyMessage, type LineTextEvent } from "../../services/lineService"
 import { findOrCreateUserByLineId } from "../../services/userService"
 import { getPointsBalance } from "../point/point.service"
-import { buildActivityFlex, buildPointsFlex, buildRewardsFlex } from "../../utils/flexTemplates"
+import { buildActivityFlex, buildDailyPlannerFlex, buildPointsFlex, buildRewardsFlex } from "../../utils/flexTemplates"
 import { getCarbonSummary } from "../carbon/carbon.service"
 import type { AuthenticatedUser } from "../../middlewares/auth"
 import { rewardsList } from "../rewards/rewards.data"
+import { dailyPlanner } from "../ai/ai.service"
+import { prisma } from "../db/prisma"
 
 const POINT_KEYWORDS = ["แต้ม", "คะแนน", "point"]
 const ACTIVITY_KEYWORDS = ["กิจกรรม", "activity"]
 const REWARD_KEYWORDS = ["รางวัล", "rewars", "reward", "rewards"]
+const PLANNER_KEYWORDS = ["แผน", "แผนวันนี้", "planner", "plan", "daily"]
 
 export async function handleLineEvents(events: any[]) {
   await Promise.all(
@@ -31,8 +34,9 @@ async function handleTextEvent(event: LineTextEvent) {
     const wantsPoints = POINT_KEYWORDS.includes(text)
     const wantsActivity = ACTIVITY_KEYWORDS.includes(text)
     const wantsReward = REWARD_KEYWORDS.includes(text)
+    const wantsPlanner = PLANNER_KEYWORDS.includes(text)
 
-    if (!wantsPoints && !wantsActivity && !wantsReward) {
+    if (!wantsPoints && !wantsActivity && !wantsReward && !wantsPlanner) {
       await replyMessage(replyToken, defaultHelpMessage())
       return
     }
@@ -59,6 +63,34 @@ async function handleTextEvent(event: LineTextEvent) {
       await replyMessage(replyToken, buildRewardsMessage(user.points))
       return
     }
+
+    if (wantsPlanner) {
+      const activitiesToday = await getTodayActivities(user.id)
+      const aiRequest = {
+        activities: activitiesToday.map((a) => `${a.category}: ${a.type}`),
+        travel: [],
+      }
+
+      const plan = await dailyPlanner(aiRequest)
+      if (!plan.success) {
+        await replyMessage(replyToken, {
+          type: "text",
+          text: "เรียก AI planner ไม่สำเร็จ ลองใหม่อีกครั้งนะ",
+        })
+        return
+      }
+
+      if (!plan.result) {
+        await replyMessage(replyToken, {
+          type: "text",
+          text: "ยังไม่ได้รับผลลัพธ์จาก AI planner",
+        })
+        return
+      }
+
+      await replyMessage(replyToken, buildDailyPlannerMessage(plan.result))
+      return
+    }
   } catch (error) {
     console.error("LINE webhook error:", error)
     await replyMessage(replyToken, errorMessage())
@@ -75,7 +107,7 @@ function buildPointsMessage(balance: number): Message {
 function defaultHelpMessage(): Message {
   return {
     type: "text",
-    text: 'สวัสดี! คำสั่งที่ใช้ได้: "แต้ม" เช็คคะแนน, "กิจกรรม" เช็คความคืบหน้าวันนี้, "รางวัล" ดูของที่แลกได้',
+    text: 'สวัสดี! คำสั่ง: "แต้ม" เช็คคะแนน, "กิจกรรม" ความคืบหน้า, "รางวัล" ของแลกได้, "แผน" ให้ AI วางแผนลดคาร์บอน',
   }
 }
 
@@ -117,5 +149,29 @@ function buildRewardsMessage(points: number): Message {
     points,
     affordable,
     next: next ?? undefined,
+  })
+}
+
+function buildDailyPlannerMessage(result: NonNullable<Awaited<ReturnType<typeof dailyPlanner>>["result"]>): Message {
+  return buildDailyPlannerFlex({
+    title: "AI Daily Planner",
+    summaryReduction: result.summary_reduction,
+    activities: result.analysis,
+    travel: result.travel_analysis,
+  })
+}
+
+async function getTodayActivities(userId: string) {
+  const today = new Date()
+  const dateString = today.toISOString().split("T")[0]
+  return prisma.activity.findMany({
+    where: {
+      userId,
+      date: {
+        gte: new Date(`${dateString}T00:00:00`),
+        lte: new Date(`${dateString}T23:59:59`),
+      },
+    },
+    orderBy: { createdAt: "desc" },
   })
 }

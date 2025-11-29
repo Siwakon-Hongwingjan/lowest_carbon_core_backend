@@ -17,6 +17,25 @@ type RewardsPayload = {
   next?: { name: string; cost: number }
 }
 
+type DailyPlannerPayload = {
+  title?: string
+  summaryReduction?: number
+  activities?: {
+    original: string
+    current_co2: number
+    alternative: string
+    alternative_co2: number
+    reduced: number
+  }[]
+  travel?: {
+    origin: string
+    destination: string
+    current_mode: string
+    recommended_mode: string
+    reduced: number
+  }[]
+}
+
 export function buildPointsFlex({ points, description }: PointsPayload): FlexMessage {
   return {
     type: "flex",
@@ -220,6 +239,103 @@ export function buildRewardsFlex(payload: RewardsPayload): FlexMessage {
                 size: "sm",
                 color: "#4CAF50",
               },
+        ],
+      },
+    },
+  }
+}
+
+export function buildDailyPlannerFlex(payload: DailyPlannerPayload): FlexMessage {
+  const title = payload.title ?? "แผนลดคาร์บอนวันนี้"
+  const activities = payload.activities?.slice(0, 3) ?? []
+  const travel = payload.travel?.slice(0, 2) ?? []
+  const reduction = payload.summaryReduction ?? activities.reduce((sum, a) => sum + (a.reduced ?? 0), 0)
+
+  const activityBlocks =
+    activities.length > 0
+      ? activities.map((a) => ({
+          type: "box" as const,
+          layout: "vertical" as const,
+          spacing: "xs",
+          contents: [
+            { type: "text" as const, text: a.original, size: "sm", color: "#1B5E20", wrap: true },
+            { type: "text" as const, text: `ทางเลือก: ${a.alternative}`, size: "sm", color: "#2E7D32", wrap: true },
+            { type: "text" as const, text: `ลดได้ ~${a.reduced.toFixed(2)} kg CO₂`, size: "xs", color: "#4CAF50" },
+          ],
+        }))
+      : [
+          {
+            type: "text" as const,
+            text: "ยังไม่มีข้อเสนอเกี่ยวกับกิจกรรม ลองส่งกิจกรรมเพิ่มเติมเพื่อให้ AI วางแผนได้",
+            size: "sm",
+            color: "#4CAF50",
+            wrap: true,
+          },
+        ]
+
+  const travelBlocks =
+    travel.length > 0
+      ? travel.map((t) => ({
+          type: "box" as const,
+          layout: "vertical" as const,
+          spacing: "xs",
+          contents: [
+            {
+              type: "text" as const,
+              text: `${t.origin} → ${t.destination}`,
+              size: "sm",
+              color: "#1B5E20",
+              wrap: true,
+            },
+            {
+              type: "text" as const,
+              text: `โหมด: ${t.current_mode} → แนะนำ: ${t.recommended_mode}`,
+              size: "sm",
+              color: "#2E7D32",
+              wrap: true,
+            },
+            { type: "text" as const, text: `ลดได้ ~${t.reduced.toFixed(2)} kg CO₂`, size: "xs", color: "#4CAF50" },
+          ],
+        }))
+      : [
+          {
+            type: "text" as const,
+            text: "ยังไม่มีเส้นทางที่ต้องเดินทางวันนี้",
+            size: "sm",
+            color: "#4CAF50",
+            wrap: true,
+          },
+        ]
+
+  return {
+    type: "flex",
+    altText: "แผนลดคาร์บอนจาก AI",
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        paddingAll: "16px",
+        spacing: "md",
+        contents: [
+          { type: "text", text: title, weight: "bold", size: "lg", color: "#1B5E20" },
+          { type: "text", text: `ลดได้รวม ~${reduction.toFixed(2)} kg CO₂`, size: "sm", color: "#2E7D32" },
+          { type: "separator", margin: "md", color: "#A5D6A7" },
+          { type: "text", text: "กิจกรรมที่แนะนำ", size: "sm", weight: "bold", color: "#1B5E20" },
+          {
+            type: "box",
+            layout: "vertical",
+            spacing: "sm",
+            contents: activityBlocks,
+          },
+          { type: "separator", margin: "md", color: "#A5D6A7" },
+          { type: "text", text: "การเดินทาง", size: "sm", weight: "bold", color: "#1B5E20" },
+          {
+            type: "box",
+            layout: "vertical",
+            spacing: "sm",
+            contents: travelBlocks,
+          },
         ],
       },
     },
