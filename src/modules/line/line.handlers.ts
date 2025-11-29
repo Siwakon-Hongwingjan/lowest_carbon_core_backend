@@ -2,7 +2,7 @@ import type { Message } from "@line/bot-sdk"
 import { replyMessage, type LineTextEvent } from "../../services/lineService"
 import { findOrCreateUserByLineId } from "../../services/userService"
 import { getPointsBalance } from "../point/point.service"
-import { buildPointsFlex } from "../../utils/flexTemplates"
+import { buildActivityFlex, buildPointsFlex, buildRewardsFlex } from "../../utils/flexTemplates"
 import { getCarbonSummary } from "../carbon/carbon.service"
 import type { AuthenticatedUser } from "../../middlewares/auth"
 import { rewardsList } from "../rewards/rewards.data"
@@ -102,31 +102,20 @@ function buildActivityMessage(summary: Awaited<ReturnType<typeof getCarbonSummar
     Math.max(0, targets.FOOD - categories.FOOD) +
     Math.max(0, targets.OTHER - categories.OTHER)
 
-  const progressLine = `เดินทาง ${categories.TRANSPORT}/2 • อาหาร ${categories.FOOD}/2 • อื่นๆ ${categories.OTHER}/2`
-  const statusLine =
-    remaining === 0
-      ? "ครบเงื่อนไข รับคะแนนได้แล้ว! 🎉"
-      : `เหลืออีก ${remaining} กิจกรรมเพื่อรับคะแนนวันนี้`
-
-  return {
-    type: "text",
-    text: `วันนี้บันทึกแล้ว ${totalDone} รายการ\n${progressLine}\n${statusLine}`,
-  }
+  return buildActivityFlex({
+    categories,
+    remaining,
+    totalDone,
+  })
 }
 
 function buildRewardsMessage(points: number): Message {
   const affordable = rewardsList.filter((r) => points >= r.cost)
   const next = rewardsList.find((r) => r.cost > points)
 
-  const affordableLine =
-    affordable.length > 0
-      ? affordable.map((r) => `• ${r.name} (${r.cost} คะแนน)`).join("\n")
-      : "ยังแลกไม่ได้ ลุยบันทึกกิจกรรมกันต่อ!"
-
-  const nextLine = next ? `ต่อไป: ${next.name} อีก ${next.cost - points} คะแนน` : "ได้ทุกอย่างแล้ว!"
-
-  return {
-    type: "text",
-    text: `คะแนนสะสม ${points} คะแนน\nของที่แลกได้:\n${affordableLine}\n${nextLine}`,
-  }
+  return buildRewardsFlex({
+    points,
+    affordable,
+    next: next ?? undefined,
+  })
 }
