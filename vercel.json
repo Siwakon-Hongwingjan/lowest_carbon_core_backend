@@ -3,5 +3,6 @@
   "bunVersion": "1.x",
   "installCommand": "bun install",
   "buildCommand": "bun run build",
-  "framework": null
+  "framework": null,
+  "outputDirectory": "."
 }
