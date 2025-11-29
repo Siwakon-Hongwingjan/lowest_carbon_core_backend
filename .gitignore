@@ -53,3 +53,6 @@ package-lock.json
 /app/generated/prisma
 
 /generated/prisma
+
+/.env
+/gen-lang-client-0597259221-1ba549e37fb0.json
