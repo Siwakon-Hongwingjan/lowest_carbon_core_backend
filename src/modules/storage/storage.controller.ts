@@ -55,6 +55,8 @@ const storage = new Storage({
 
 const bucket = env.GCS_BUCKET ? storage.bucket(env.GCS_BUCKET) : null
 
+type StorageContext = { body: { file?: File }; set: { status?: number } }
+
 function buildFileName(original?: string) {
   const ext = original ? path.extname(original) : ""
   const slug = crypto.randomBytes(6).toString("hex")
@@ -63,7 +65,8 @@ function buildFileName(original?: string) {
 
 export const storageController = new Elysia({ prefix: "/storage" }).post(
   "/upload",
-  async ({ body, set }: { body: { file?: File }; set: { status?: number } }) => {
+  async (ctx: any) => {
+    const { body, set } = ctx as StorageContext
     if (!bucket) {
       set.status = 500
       return { success: false, message: "GCS is not configured" }

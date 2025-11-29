@@ -7,7 +7,7 @@ export type AuthenticatedUser = {
 }
 
 declare module "elysia" {
-  type Context = {
+  interface Context {
     user: AuthenticatedUser
   }
 }

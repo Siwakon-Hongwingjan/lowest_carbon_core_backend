@@ -1,8 +1,14 @@
 import { prisma } from "../db/prisma"
+import type { AuthenticatedUser } from "../../middlewares/auth"
+
+type CarbonActivity = {
+  category: string
+  co2: number | null
+}
 
 const AVERAGE_CO2_THAI = 6.5 // kg/day (ปรับได้ทีหลัง)
 
-export async function getCarbonSummary(date: string, user: any) {
+export async function getCarbonSummary(date: string, user: AuthenticatedUser) {
   const target = new Date(date)
   const start = new Date(target)
   start.setHours(0, 0, 0, 0)
@@ -11,7 +17,7 @@ export async function getCarbonSummary(date: string, user: any) {
   end.setHours(23, 59, 59, 999)
 
   // 1) ดึงกิจกรรมทั้งหมดของวันนั้น
-  const activities = await prisma.activity.findMany({
+  const activities = (await prisma.activity.findMany({
     where: {
       userId: user.userId,
       date: {
@@ -19,7 +25,7 @@ export async function getCarbonSummary(date: string, user: any) {
         lte: end
       }
     }
-  })
+  })) as CarbonActivity[]
 
   // นับจำนวนประเภท
   const categoryCounts = {
@@ -29,7 +35,7 @@ export async function getCarbonSummary(date: string, user: any) {
   }
 
   // 2) รวมคาร์บอน (ยังไม่คำนวณ co2 → null → ให้ AI คำนวณทีหลัง)
-  const totalCo2 = activities.reduce((sum, item) => sum + (item.co2 ?? 0), 0)
+  const totalCo2 = activities.reduce((sum: number, item: CarbonActivity) => sum + (item.co2 ?? 0), 0)
 
   const activitiesCompleted =
     categoryCounts.TRANSPORT >= 2 &&

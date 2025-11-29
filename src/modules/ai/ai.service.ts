@@ -149,8 +149,8 @@ export async function calcCo2WithAI(activities: ActivityPayload[], userId: strin
     return aiResponse
   }
 
-  const aiActivities: AiActivityResult[] = aiResponse.result.activities ?? []
-  const ids = aiActivities.map((a) => a.id)
+  const aiActivities = (aiResponse.result?.activities ?? []) as AiActivityResult[]
+  const ids = aiActivities.map((a: AiActivityResult) => a.id)
 
   const ownedActivities = await prisma.activity.findMany({
     where: {
@@ -162,8 +162,8 @@ export async function calcCo2WithAI(activities: ActivityPayload[], userId: strin
   const ownedSet = new Set(ownedActivities.map((a) => a.id))
 
   const updates = aiActivities
-    .filter((a) => ownedSet.has(a.id) && Number.isFinite(a.co2))
-    .map((a) =>
+    .filter((a: AiActivityResult) => ownedSet.has(a.id) && Number.isFinite(a.co2))
+    .map((a: AiActivityResult) =>
       prisma.activity.update({
         where: { id: a.id },
         data: {

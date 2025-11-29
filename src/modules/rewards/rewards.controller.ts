@@ -1,6 +1,9 @@
 import { Elysia, t } from "elysia"
+import type { AuthenticatedUser } from "../../middlewares/auth"
 import { rewardsList } from "./rewards.data"
 import { redeemReward, getRewardHistory } from "./rewards.service"
+
+type RewardContext = { body: { rewardId: string }; user: AuthenticatedUser }
 
 export const rewardsPublicController = new Elysia({ prefix: "/rewards" })
 
@@ -14,8 +17,9 @@ export const rewardsPrivateController = new Elysia({ prefix: "/rewards" })
   // ▶ POST /rewards/redeem
   .post(
     "/redeem",
-    async ({ body, user }: { body: { rewardId: string }; user: any }) => {
-      return await redeemReward(body.rewardId, user!)
+    async (ctx: any) => {
+      const { body, user } = ctx as RewardContext
+      return await redeemReward(body.rewardId, user)
     },
     {
       body: t.Object({
@@ -25,6 +29,7 @@ export const rewardsPrivateController = new Elysia({ prefix: "/rewards" })
   )
 
   // ▶ GET /rewards/history
-  .get("/history", async ({ user } : {user : any}) => {
-    return await getRewardHistory(user!)
+  .get("/history", async (ctx: any) => {
+    const { user } = ctx as RewardContext
+    return await getRewardHistory(user)
   })

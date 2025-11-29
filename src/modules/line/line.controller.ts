@@ -6,7 +6,8 @@ const channelSecret = process.env.LINE_CHANNEL_SECRET || ""
 
 export const lineController = new Elysia({ prefix: "/line" }).post(
   "/webhook",
-  async ({ request, set }: { request: Request; set: { status?: number } }) => {
+  async (ctx: any) => {
+    const { request, set } = ctx
     const signature = request.headers.get("x-line-signature") || ""
     const rawBody = await request.text()
 
