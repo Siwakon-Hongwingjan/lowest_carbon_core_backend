@@ -159,7 +159,7 @@ export async function calcCo2WithAI(activities: ActivityPayload[], userId: strin
     },
     select: { id: true },
   })
-  const ownedSet = new Set(ownedActivities.map((a) => a.id))
+  const ownedSet = new Set(ownedActivities.map((a: { id: string }) => a.id))
 
   const updates = aiActivities
     .filter((a: AiActivityResult) => ownedSet.has(a.id) && Number.isFinite(a.co2))

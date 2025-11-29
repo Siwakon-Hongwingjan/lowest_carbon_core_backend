@@ -6,12 +6,6 @@ export type AuthenticatedUser = {
   lineUserId: string
 }
 
-declare module "elysia" {
-  interface Context {
-    user: AuthenticatedUser
-  }
-}
-
 type TokenPayload = JwtPayload & AuthenticatedUser
 
 export const unauthorizedBody = {
