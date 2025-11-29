@@ -28,7 +28,7 @@ export const app = new Elysia()
   .use(authController) // public
   .use(rewardsPublicController)
   .use(authMiddleware) // protected below
-  .get("/me", ({ user }: { user: any }) => ({ message: "Authenticated", user }))
+  .get("/me", ({ user }: { user?: any }) => ({ message: "Authenticated", user }))
   .use(activitiesController)
   .use(aiController)
   .use(carbonController)
