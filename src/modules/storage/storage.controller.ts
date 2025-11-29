@@ -63,7 +63,7 @@ function buildFileName(original?: string) {
 
 export const storageController = new Elysia({ prefix: "/storage" }).post(
   "/upload",
-  async ({ body, set }) => {
+  async ({ body, set }: { body: { file?: File }; set: { status?: number } }) => {
     if (!bucket) {
       set.status = 500
       return { success: false, message: "GCS is not configured" }

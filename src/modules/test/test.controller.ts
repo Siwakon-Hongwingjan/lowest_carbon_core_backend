@@ -17,7 +17,7 @@ const createCustomer = async () => {
 
 export const testController = new Elysia()
   .group("/test", (app) =>
-    app.get("/customer", async ({ set }) => {
+    app.get("/customer", async ({ set }: { set: { status?: number } }) => {
       try {
         return await createCustomer()
       } catch (e) {
@@ -29,7 +29,7 @@ export const testController = new Elysia()
       }
     }),
   )
-  .get("/customer", async ({ set }) => {
+  .get("/customer", async ({ set }: { set: { status?: number } }) => {
     try {
       return await createCustomer()
     } catch (e) {
