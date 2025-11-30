@@ -27,6 +27,7 @@ export const app = new Elysia()
   .use(lineController)
   .use(authController) // public
   .use(rewardsPublicController)
+  .use(storageController)
   .use(authMiddleware) // protected below
   .get("/me", ({ user }: { user?: any }) => ({ message: "Authenticated", user }))
   .use(activitiesController)
@@ -37,4 +38,3 @@ export const app = new Elysia()
   .use(profileController)
   .use(testController)
   .use(metaController)
-  .use(storageController)
