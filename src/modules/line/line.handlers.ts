@@ -13,6 +13,7 @@ const POINT_KEYWORDS = ["แต้ม", "คะแนน", "point"]
 const ACTIVITY_KEYWORDS = ["กิจกรรม", "activity"]
 const REWARD_KEYWORDS = ["รางวัล", "rewars", "reward", "rewards"]
 const PLANNER_KEYWORDS = ["แผน", "แผนวันนี้", "planner", "plan", "daily"]
+const RESET_KEYWORDS = ["เริ่มใหม่", "start"]
 
 export async function handleLineEvents(events: any[]) {
   await Promise.all(
@@ -49,6 +50,12 @@ async function handleTextEvent(event: LineTextEvent) {
     const wantsActivity = ACTIVITY_KEYWORDS.includes(text)
     const wantsReward = REWARD_KEYWORDS.includes(text)
     const wantsPlanner = PLANNER_KEYWORDS.includes(text)
+    const wantsWelcome = RESET_KEYWORDS.includes(text)
+
+    if (wantsWelcome) {
+      await replyMessage(replyToken, welcomeMessage())
+      return
+    }
 
     if (!wantsPoints && !wantsActivity && !wantsReward && !wantsPlanner) {
       await replyMessage(replyToken, defaultHelpMessage())
