@@ -1,5 +1,5 @@
 import type { Message } from "@line/bot-sdk"
-import { replyMessage, type LineTextEvent } from "../../services/lineService"
+import { replyMessage, type LineTextEvent, markMessageAsRead } from "../../services/lineService"
 import { findOrCreateUserByLineId } from "../../services/userService"
 import { getPointsBalance } from "../point/point.service"
 import { buildActivityFlex, buildDailyPlannerFlex, buildPointsFlex, buildRewardsFlex } from "../../utils/flexTemplates"
@@ -29,8 +29,11 @@ async function handleTextEvent(event: LineTextEvent) {
 
   const text = event.message?.text?.trim().toLowerCase() ?? ""
   const replyToken = event.replyToken
+  const markAsReadToken = event.message?.markAsReadToken
 
   try {
+    void markMessageAsRead(markAsReadToken)
+
     const wantsPoints = POINT_KEYWORDS.includes(text)
     const wantsActivity = ACTIVITY_KEYWORDS.includes(text)
     const wantsReward = REWARD_KEYWORDS.includes(text)

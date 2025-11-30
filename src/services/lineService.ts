@@ -31,8 +31,30 @@ export type LineTextEvent = WebhookEvent & {
   message: {
     type: "text"
     text: string
+    markAsReadToken?: string
   }
   source: {
     userId?: string
+  }
+}
+
+export async function markMessageAsRead(markAsReadToken?: string) {
+  if (!markAsReadToken) return
+  if (!channelAccessToken) {
+    console.warn("LINE_CHANNEL_ACCESS_TOKEN is missing; skip markAsRead")
+    return
+  }
+
+  try {
+    await fetch("https://api.line.me/v2/bot/chat/markAsRead", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${channelAccessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ markAsReadToken }),
+    })
+  } catch (err) {
+    console.warn("Failed to mark message as read", err)
   }
 }
