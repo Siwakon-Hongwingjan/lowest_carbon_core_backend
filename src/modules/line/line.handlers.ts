@@ -17,10 +17,21 @@ const PLANNER_KEYWORDS = ["แผน", "แผนวันนี้", "planner",
 export async function handleLineEvents(events: any[]) {
   await Promise.all(
     events.map(async (event: any) => {
+      if (event.type === "follow") {
+        await handleFollowEvent(event)
+        return
+      }
       if (event.type !== "message" || event.message?.type !== "text") return
       await handleTextEvent(event as LineTextEvent)
     }),
   )
+}
+
+async function handleFollowEvent(event: any) {
+  const replyToken = event.replyToken
+  if (!replyToken) return
+
+  await replyMessage(replyToken, welcomeMessage())
 }
 
 async function handleTextEvent(event: LineTextEvent) {
@@ -111,6 +122,19 @@ function defaultHelpMessage(): Message {
   return {
     type: "text",
     text: 'สวัสดี! คำสั่ง: "แต้ม" เช็คคะแนน, "กิจกรรม" ความคืบหน้า, "รางวัล" ของแลกได้, "แผน" ให้ AI วางแผนลดคาร์บอน',
+  }
+}
+
+function welcomeMessage(): Message {
+  return {
+    type: "text",
+    text: [
+      "ยินดีต้อนรับสู่บัญชี {AccountName} 🌿",
+      "บันทึกกิจกรรม/การเดินทาง/อาหาร แล้วให้ AI คำนวณคาร์บอน + รับแต้มแลกของรางวัล",
+      "",
+      'คำสั่งที่ใช้ได้: "แต้ม", "กิจกรรม", "รางวัล", "แผนวันนี้"',
+      "หรือเปิด Mini App เพื่อล็อกอินและเริ่มบันทึกได้เลย",
+    ].join("\n"),
   }
 }
 
